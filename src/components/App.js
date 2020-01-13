@@ -1,12 +1,14 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
-import { Container, Modal, Button, Icon } from 'semantic-ui-react';
+import { Container } from 'semantic-ui-react';
 import { Fragment } from 'redux-little-router';
 
 import Header from './Header';
 import Footer from './Footer';
 import PostList from './PostList';
 import PostDetail from './PostDetail';
+import Empty from './Empty';
+import LoginConfirmModal from './LoginConfirmModal';
 
 import { queries } from '../utils';
 
@@ -27,39 +29,13 @@ class App extends Component {
   renderLoginConfirmModal() {
     const { authed, code, setAuthCode, getAccessToken, accessTokenLoading } = this.props;
     return (
-      <Modal
-        open={authed}
-        closeOnEscape={false}
-        closeOnRootNodeClick={false}
-        size='small'
-      >
-        <Modal.Header>
-          确认授权登录
-        </Modal.Header>
-        <Modal.Content>
-          <p>您愿意授权登录到此博客，永不变心吗？</p>
-        </Modal.Content>
-        <Modal.Actions>
-          <Button 
-            negative
-            disabled={accessTokenLoading}
-            onClick={() => setAuthCode(null, null)}
-          >
-            再想想
-          </Button>
-          <Button
-            positive
-            disabled={accessTokenLoading}
-            onClick={() => getAccessToken(code)}
-          >
-            <Icon
-              name={accessTokenLoading ? 'circle notched' : 'checkmark'}
-              loading={accessTokenLoading}
-            />
-            {"我愿意"}
-          </Button>
-        </Modal.Actions>
-      </Modal>
+      <LoginConfirmModal
+        authed={authed}
+        code={code}
+        setAuthCode={setAuthCode}
+        getAccessToken={getAccessToken}
+        accessTokenLoading={accessTokenLoading}
+      />
     );
   }
 
@@ -70,8 +46,34 @@ class App extends Component {
         <Header />
         <Fragment forRoute='/'>
           <div>
+            <Fragment forRoute='/posts'>
+              <div>
+                <Fragment forRoute='/:postId'>
+                  <div>
+                    <Fragment forRoute='/:whatever'><Empty /></Fragment>
+                    <Fragment forRoute='/'><PostDetail /></Fragment>
+                    <Fragment forNoMatch><Empty /></Fragment>
+                  </div>
+                </Fragment>
+                <Fragment forRoute='/'><PostList /></Fragment>
+                <Fragment forNoMatch><Empty /></Fragment>
+              </div>
+            </Fragment>
+            <Fragment forRoute='/tags'>
+              <div>
+                <Fragment forRoute='/:tagName'>
+                  <div>
+                    <Fragment forRoute='/:whatever'><Empty /></Fragment>
+                    <Fragment forRoute='/'><PostList /></Fragment>
+                    <Fragment forNoMatch><Empty /></Fragment>
+                  </div>
+                </Fragment>
+                <Fragment forRoute='/'><Empty /></Fragment>
+                <Fragment forNoMatch><Empty /></Fragment>
+              </div>
+            </Fragment>
             <Fragment forRoute='/'><PostList /></Fragment>
-            <Fragment forRoute='/posts/:postId'><PostDetail /></Fragment>
+            <Fragment forNoMatch><Empty /></Fragment>
           </div>
         </Fragment>
         <Footer />
@@ -86,7 +88,7 @@ const mapStateToProps = (state) => ({
   accessTokenLoading: state.state.loading.accessToken,
 });
 
-const mapStateToDispatch = (dispatch) => ({
+const mapDispatchToProps = (dispatch) => ({
   setAuthCode: (code, rstr) => dispatch({
     type: SET_AUTH_CODE,
     payload: { code, rstr },
@@ -94,4 +96,4 @@ const mapStateToDispatch = (dispatch) => ({
   getAccessToken: (code) => dispatch(access(code)),
 });
 
-export default connect(mapStateToProps, mapStateToDispatch)(App);
+export default connect(mapStateToProps, mapDispatchToProps)(App);
